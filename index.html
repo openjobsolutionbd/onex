@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1e1e20">
+<meta name="apple-mobile-web-app-title" content="ONEX">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23252528'/%3E%3Cpath d='M96 40 L160 152 L32 152 Z' fill='%23e5b567'/%3E%3C/svg%3E">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/style.css">
+<script>
+// Global base64 helper (Unicode safe)
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+</script>
+<script src="/app.js"></script>
+<script src="/logger.js"></script>
+<script src="/assistant.js"></script>
+<title>ONEX</title>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark" id="logoMark">
+      <div class="logo-mark-inner"></div>
+    </div>
+    <span class="logo-text">ONEX</span>
+  </div>
+  <div class="hdr-right">
+    <div class="gh-pill" id="ghPill">
+      <div class="gh-pill-dot" id="ghPillDot"></div>
+      <span id="ghPillTxt">not connected</span>
+    </div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Theme toggle">🌙</button>
+    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙</button>
+  </div>
+</header>
+
+<main>
+
+<!-- SEARCH -->
+<div class="view active" id="view-search">
+  <div class="search-wrap">
+    <div class="search-input-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" id="sInput" placeholder="Search" autocomplete="off" inputmode="search" />
+    </div>
+    <button class="search-btn" onclick="doSearch()">⌕</button>
+  </div>
+  <div class="filter-row" id="filterRow"></div>
+  <div class="res-label" id="resLabel"></div>
+  <div id="results">
+    <!-- ডায়নামিক কনটেন্ট -->
+  </div>
+</div>
+
+<!-- WRITE -->
+<div class="view" id="view-write">
+  <div class="field">
+    <label class="flabel">Topic</label>
+    <input class="finput" id="wTopic" placeholder="যেমন: সাধারণ জ্ঞান" />
+  </div>
+  <div class="field">
+    <label class="flabel">Category</label>
+    <select class="fselect" id="wCat" onchange="toggleCustomCat()">
+      <option value="">— বেছে নাও —</option>
+      <option value="grammar">Grammar</option>
+      <option value="literature">Literature</option>
+      <option value="math">Math</option>
+      <option value="__custom__">+ Custom…</option>
+    </select>
+    <input class="finput" id="wCatCustom" placeholder="নতুন category লেখো" style="display:none;margin-top:8px" />
+  </div>
+  <div class="field">
+    <label class="flabel">Content</label>
+    <textarea class="ftextarea" id="wContent" placeholder="এখানে content লেখো…"></textarea>
+  </div>
+
+  <div class="field">
+    <label class="flabel">Push করবে কোন Repo-তে</label>
+    <div class="repo-row">
+      <button class="repo-btn active" onclick="selectRepo(this,'openjobsolutionbd/db')">DB</button>
+      <button class="repo-btn" onclick="selectRepo(this,'openjobsolutionbd/app')">OJS</button>
+      <button class="repo-btn" onclick="selectRepo(this,'openjobsolutionbd/onex')">ONEX</button>
+    </div>
+    <input type="hidden" id="wRepo" value="openjobsolutionbd/db" />
+  </div>
+  <div class="sbar" id="wSbar"></div>
+  <div class="act-row">
+    <button class="btn btn-ghost" onclick="clearWrite()">Clear</button>
+    <button class="btn btn-primary" onclick="sendToPending()">Send →</button>
+  </div>
+</div>
+
+<!-- PENDING -->
+<div class="view" id="view-pending">
+  <div class="pend-hdr">
+    <div class="pend-hdr-left">
+      <h2>Pending Review</h2>
+      <div class="pend-ct" id="pendCt">0 entry অপেক্ষায়</div>
+    </div>
+  </div>
+  <div id="pendList">
+    <div class="empty">
+      <div class="empty-ico">✓</div>
+      <div class="empty-lbl">সব clear</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="nb-search" onclick="switchView('search',this)">
+    <span class="bico">⌕</span>Search
+  </button>
+  <button class="bnav-btn" id="nb-write" onclick="switchView('write',this)">
+    <span class="bico">✎</span>Write
+  </button>
+  <button class="bnav-btn" id="nb-pending" onclick="switchView('pending',this)">
+    <span class="bico">⏳</span>Pending
+    <span class="bnav-badge" id="badge" style="display:none"></span>
+  </button>
+</nav>
+
+<!-- SETTINGS -->
+<div class="overlay" id="settModal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Settings</div>
+    <div class="modal-sub">gh token ও Target Repo সেট করো।</div>
+    
+    <div class="field">
+      <label class="flabel">gh token</label>
+      <input class="finput" id="sGhToken" type="password" placeholder="gh token দিন" />
+    </div>
+
+    <div class="field">
+      <label class="flabel">Target Repo</label>
+      <div class="repo-row">
+        <button class="repo-btn" id="sRepo-db" onclick="selectSettRepo(this,'openjobsolutionbd/db')">DB</button>
+        <button class="repo-btn" id="sRepo-app" onclick="selectSettRepo(this,'openjobsolutionbd/app')">OJS</button>
+        <button class="repo-btn" id="sRepo-onex" onclick="selectSettRepo(this,'openjobsolutionbd/onex')">ONEX</button>
+      </div>
+      <input type="hidden" id="sGhRepo" value="" />
+    </div>
+
+    <div class="modal-acts" style="flex-wrap:wrap;">
+      <button class="btn btn-ghost" style="flex:0 0 auto;padding:13px 22px" onclick="closeSettings()">বাতিল</button>
+      <button class="btn btn-dark" style="flex:0 0 auto;padding:13px 22px" onclick="showLogs()">📋 লগ দেখুন</button>
+      <button class="btn btn-primary" style="flex:0 0 auto;padding:13px 22px" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL BOTTOM SHEET -->
+<div class="d-overlay" id="dOverlay" onclick="closeDetail()"></div>
+<div class="d-sheet" id="dSheet">
+  <div class="d-handle"></div>
+  <div class="d-inner">
+    <div class="d-header">
+      <button class="d-close" onclick="closeDetail()">✕ বন্ধ করো</button>
+    </div>
+    <div id="dContent"></div>
+  </div>
+</div>
+
+</body>
+</html>

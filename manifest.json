@@ -1,0 +1,20 @@
+{
+  "name": "ONEX",
+  "short_name": "ONEX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1e20",
+  "theme_color": "#e5b567",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23252528'/%3E%3Cpath d='M96 40 L160 152 L32 152 Z' fill='%23e5b567'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23252528'/%3E%3Cpath d='M256 100 L430 400 L82 400 Z' fill='%23e5b567'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
